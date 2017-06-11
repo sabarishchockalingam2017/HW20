@@ -77,6 +77,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
     TextView TView;
     SeekBar TControl;
 
+    SeekBar KPControl;
+    TextView KView;
+    SeekBar MControl;
+    TextView MView;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -98,6 +103,11 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
         RControl = (SeekBar) findViewById(R.id.RSeek);
         TView = (TextView) findViewById(R.id.TText);
         TControl = (SeekBar) findViewById(R.id.TSeek);
+
+        KPControl = (SeekBar) findViewById(R.id.KSeek);
+        KView = (TextView) findViewById(R.id.kpSet);
+        MControl = (SeekBar) findViewById(R.id.MSeek);
+        MView = (TextView) findViewById(R.id.MaxDutySet);
 
         // see if the app has permission to use the camera
        // ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 1);
@@ -281,6 +291,58 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        KPControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            int progressChanged = 0;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                progressChanged = progress;
+                KView.setText("kp: "+ (float)progress/1000.0);
+
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                String sendString = String.valueOf(KPControl.getProgress()) + 'k';
+                try {
+                    sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                } catch (IOException e) { }
+
+            }
+        });
+
+        MControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            int progressChanged = 0;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                progressChanged = progress;
+                MView.setText("Max Duty Cycle: "+progress);
+
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                String sendString = String.valueOf(MControl.getProgress()) + 'm';
+                try {
+                    sPort.write(sendString.getBytes(), 10); // 10 is the timeout
+                } catch (IOException e) { }
 
             }
         });

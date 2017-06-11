@@ -70,13 +70,16 @@ int rxVal = 0; // a place to store the int that was received
 int m=0;
 int moto[5]={0};
 int left, right, error;
-double kp=3.5;
 int forward=1; // servo control
 int deg=0; // servo control
 int servoTime=0;
 
 
-int MAX_DUTY=1119;
+int MAX_DUTY=1000;
+float kp=2.2;
+
+
+
 // *****************************************************************************
 /* Application Data
   Summary:
@@ -378,7 +381,7 @@ void APP_Initialize(void) {
     TMR3 = 0;
     OC3CONbits.OCM = 0b110; // PWM mode without fault pin; other OC1CON bits are defaults
     OC3CONbits.OCTSEL = 1; // use timer3
-    OC3RS = 1500; // should set the motor to 90 degrees (0.5ms to 2.5ms is 1500 to 7500 for 0 to 180 degrees)
+    OC3RS = 1500; // should set the motor to 0 degrees (0.5ms to 2.5ms is 1500 to 7500 for 0 to 180 degrees)
     OC3R = 4500; // read-only
     T3CONbits.ON = 1;
     OC3CONbits.ON = 1;
@@ -440,6 +443,18 @@ void APP_Tasks(void) {
                 // loop thru the characters in the buffer
                 while (appData.readBuffer[ii] != 0) {
                     // if you got a newline
+                    
+                    if(appData.readBuffer[ii]=='m'){
+                        rx[rxPos]=0;
+                        sscanf(rx,"%d", &rxVal);
+                        MAX_DUTY = rxVal;
+                        gotRx=1;
+                    }else if(appData.readBuffer[ii]=='k'){
+                        rx[rxPos]=0;
+                        sscanf(rx,"%d", &rxVal);
+                        kp = (float)rxVal/1000;
+                        gotRx=1;
+                    }
                     if (appData.readBuffer[ii] == '\n' || appData.readBuffer[ii] == '\r') {
                         rx[rxPos] = 0; // end the array
                         sscanf(rx, "%d", &rxVal); // get the int out of the array
@@ -552,7 +567,7 @@ void APP_Tasks(void) {
 //            }
             
             if (gotRx) {
-                len = sprintf(dataOut, "got: %d left: %d right: %d error: %d servo: %d, deg: %d\r\n", rxVal,left,right,error, OC3RS,deg);             
+                len = sprintf(dataOut, "got: %d left: %d right: %d error: %d kp: %f MD: %d\n", rxVal,left,right,error, kp,MAX_DUTY);             
                 i++;
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
                         &appData.writeTransferHandle,
@@ -563,7 +578,7 @@ void APP_Tasks(void) {
               startTime = _CP0_GET_COUNT();
             } else {
 //                    len=1; dataOut[0]=0; i++;
-                len = sprintf(dataOut, "left: %d right: %d error: %d servo: %d, deg: %d\r\n", left,right,error, OC3RS,deg);
+                len = sprintf(dataOut, "got: %d left: %d right: %d error: %d kp: %f MD: %d\n", rxVal,left,right,error, kp,MAX_DUTY);
                 USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
                         &appData.writeTransferHandle, dataOut, len,
                         USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
